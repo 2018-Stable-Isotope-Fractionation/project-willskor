@@ -31,7 +31,7 @@ knitr::opts_chunk$set(eval = FALSE)
 #' @param vpd vapor pressure deficit
 #' @param t_a Air temperature
 #' @param e_a Vapor pressure
-#' @param RH Relative humidity
+#' @param rh Relative humidity
 #' @param E Overall flux of water between water surface and the bottom of a free air mass
 #' @param del_e Isotopic composition of the evaporative flux
 #' @param alpha_vl Equilibrium isotope fractionation at the vapor-liquid interface
@@ -56,10 +56,9 @@ knitr::opts_chunk$set(eval = FALSE)
 base_plot <- ggplot() + 
   aes(x = t_a, y = e_s) +
   geom_line() + 
-  scale_x_continuous(name = "temperature", labels = function(x) paste(100*x, "%"), expand = c(0,0)) +
+  # scale_x_continuous(name = "temperature") +
+  # scale_y_continuous(name = "saturation vapor pressure") +
   theme_gray()
-  
-base_plot 
 ```
 
 ## Here are the equations in full:
@@ -81,6 +80,14 @@ $$
 How does temperature change the saturation vapor pressure?
 
 ```{r}
+  a <- 611.21
+  b <- 17.502
+  c <- 240.97
+  f <- 1.007 + 3.46 * 10 ^ (-8)
+  t_a <- seq (from = 0, to = 100, by = 1)
+  e_s <- f * (a * exp((b * t_a - a)/(c + t_a)))
+
+
 df_s <- data_frame(
   a = 611.21,
   b = 17.502,
@@ -90,27 +97,9 @@ df_s <- data_frame(
   e_s = f * (a * exp((b * t_a - a)/(c + t_a)))
 
 )
-df_s
-base_plot %>% df_s
+base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = "Temperature") +
+  scale_y_continuous(name = "Saturation Vapor Pressur") 
 ```
-
-
-```{r}
-data_frame(
-  Temp.C = seq(0, 374),
-  es = calc_es(calc_Temp.K(Temp.C))
-) %>% 
-  ggplot() + aes(Temp.C, es/100) +
-  geom_line() + 
-  labs(y = "saturation vapor pressure [mbar]") 
-```
-  
-  
-
-
-
-
-
 
 
 # Vapor Pressure Deficit [VPD]:
@@ -118,10 +107,28 @@ $$
 \begin{aligned}
 e_s(T_a) - e_a &= VPD \\
 e_s(T_a) - e_a &= e_s(T_a)(1 - \frac{RH}{100%})
-
-
 \end{aligned}
 $$
+
+```{r}
+  rh <- seq (from = 0, to = 100, by = 1)
+  vpd <- e_s * t_a * ( 1 - (rh/100))
+
+df_vpd <- data_frame(
+  rh = seq (from = 0, to = 100, by = 1),
+  vpd = e_s * t_a * ( 1 - (rh/100))
+)
+base_plot %+% df_vpd %+% aes(x = rh, y = vpd) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = "Vapor Pressur Deficit") 
+
+```
+
+
+
+
+
+
+
 
 
 
