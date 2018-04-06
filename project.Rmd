@@ -44,7 +44,7 @@ knitr::opts_chunk$set(eval = FALSE)
 #' @param theta Water content of soil
 #' @param c_k 
 #' @param n soil thickness
-#' @param 
+#' @param eps
 #' @param 
 #' @param 
 #' @param 
@@ -127,8 +127,27 @@ base_plot %+% df_vpd %+% aes(x = rh, y = vpd) %+% scale_x_continuous(name = "Rel
 
 
 
+```{r} 
+# TRYING TO COMBINE 2 DATA FRAMES TO BE ON THE SAME GRAPH - VPD AND TEMPERATURE
+vpd_t <- bind_rows(
+  df_s %>% mutate(pathway = "df_s")
+  df_vpd %>% mutate(pathway = "df_vpd")
+  
+)
+
+base_plot %+% vpd_t %+% aes(x = rh, y = vpd) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = "Vapor Pressur Deficit") 
 
 
+```
+
+
+```{r}
+
+temperature on X, VPD on Y
+
+
+```
 
 
 
@@ -153,6 +172,30 @@ r &= r_M + r_T
 \end{aligned}
 $$
   
+```{r}
+rm <- seq(from = 0, to = 1, by = 0.01)
+rt <- 1 - rm
+r <- rm + rt
+e <- (1 - rh) / r
+
+df_e <- data_frame(
+  rm = seq(from = 0, to = 1, by = 0.01),
+  rt = 1 - rm,
+  r = rm + rt,
+  e = (1 - rh) / r
+
+)
+
+base_plot %+% df_e %+% aes(x = e, y = r) %+% scale_x_continuous(name = "Total Flux") +
+  scale_y_continuous(name = "r") 
+
+```
+  
+  
+  
+  
+  
+  
 
 # Evaporation Flux:
   
@@ -167,6 +210,33 @@ $$
 \end{aligned}
 $$
 
+
+
+
+```{r}
+alpha_k <- seq(from = 0, to = 1, by = 0.01)
+alpha_vl <- seq(from = 0, to = 1, by = 0.01)
+alpha <- seq(from = 0, to = 1, by = 0.01)
+eps <- ((1 - alpha) * 10 ^ 3)
+eps_k <- ((1 - alpha_k) * 10^3)
+del_l <- seq(from = -50, to = 50, by = 1)
+del_a <- seq(from = -50, to = 50, by = 1)
+
+del_e <- ((alpha_vl * del_l - rh * del_a -(eps + eps_k)) / ((1 - rh) + 10^(-3) * eps_k))
+
+df_del_e <- data_frame (
+del_e = ((alpha_vl * del_l - rh * del_a -(eps + eps_k)) / ((1 - rh) + 10^(-3) * eps_k))
+)
+
+base_plot %+% df_del_e %+% aes(x = del_e, y = rh) %+% scale_x_continuous(name = "Delta evaporating water [per mil]", limits = c(-10,200)) +
+  scale_y_continuous(name = "Relative Humidity [%]")
+
+# atex2exp::TeX("$\\delta_{\\text{ evaporating water}}$"),
+```
+
+
+
+
   
 
   
@@ -176,7 +246,7 @@ $$
   
 $$
 \begin{aligned}
-\epsilon_K &= (1-h)\frac{r_M}{r}(1 - \frac{r_M,i}{r_M})10^3 \\
+\epsilon_K &= (1-h)\frac{r_M}{r}(1 - \frac{r_{M,i}}{r_M})10^3 \\
 i & \textrm{ denotes the heavy isotope}
 
 \end{aligned}
