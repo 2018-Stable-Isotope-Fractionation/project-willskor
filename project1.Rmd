@@ -1,0 +1,353 @@
+---
+  title: "Oxygen Fractionation in the Hydrologic Cycle"
+author: "William Skorski"
+date: "`r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+  df_print: paged
+toc: yes
+toc_depth: 3
+toc_float: true
+code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r "load packages", include=FALSE}
+library(tidyverse)
+library(latex2exp)
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+### maybe use plotly 
+
+# Setting up the model
+
+
+## Base plot
+
+```{r}
+#' @param e_s Saturation Vapor Pressure
+#' @param vpd vapor pressure deficit
+#' @param t_a Air temperature
+#' @param e_a Vapor pressure
+#' @param rh Relative humidity
+#' @param E Overall flux of water between water surface and the bottom of a free air mass
+#' @param del_e Isotopic composition of the evaporative flux
+#' @param alpha_vl Equilibrium isotope fractionation at the vapor-liquid interface
+#' @param del_l Isotopic composition of liquid water
+#' @param del_a Isotopic composition of the "free atmosphere"
+#' @param eps_k Bundled total kinetic isotope effects from water vapor transport
+#' @param r_m Laminar layer
+#' @param r_t Turbulent layer
+#' @param d Diffusion coefficients of isotopic water species in air
+#' @param theta Water content of soil
+#' @param c_k 
+#' @param n soil thickness
+#' @param eps
+#' @param 
+#' @param 
+#' @param 
+
+# calc_dole_effect <- function(f_m, eps_pm, eps_rm, eps_pl, eps_rl, eps_ex, eps_evap, eps_meteoric, strat_flux_m) {
+  # f_m * (eps_pm - eps_rm) + (1 - f_m) * (eps_meteoric + eps_evap + eps_pl - eps_rl) + strat_flux_m * eps_ex }
+
+# base plot we will use for plotting
+base_plot <- ggplot() + 
+  aes(x = t_a, y = e_s) +
+  geom_line() + 
+  # scale_x_continuous(name = "temperature") +
+  # scale_y_continuous(name = "saturation vapor pressure") +
+  theme_gray()
+```
+
+## Here are the equations in full:
+
+# Temperature Effect:
+# Saturation Vapor Pressure of pure water $e_s(T)$:
+  
+
+$$
+\begin{aligned}
+e_s(T) &= f (a \cdot exp [\frac{bT}{c+T}]) \\
+& Where \\
+a &= 611.21 \\
+b &= 17.502 \\
+c &= 240.97 \\
+f &= 1.0007 + 3.46 \times 10 ^ {-8} P
+\end{aligned}
+$$
+How does temperature change the saturation vapor pressure?
+
+```{r}
+  a <- 611.21
+  b <- 17.502
+  c <- 240.97
+  f <- 1.007 + 3.46 * 10 ^ (-8)
+  t_a <- seq (from = 0, to = 100, by = 1)
+  e_s <- f * (a * exp((b * t_a - a)/(c + t_a)))
+
+
+df_s <- data_frame(
+  a = 611.21,
+  b = 17.502,
+  c = 240.97,
+  f = 1.007 + 3.46 * 10 ^ (-8),
+  t_a = seq (from = 0, to = 100, by = 1),
+  e_s = f * (a * exp((b * t_a - a)/(c + t_a)))
+
+)
+base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = "Temperature") +
+  scale_y_continuous(name = "Saturation Vapor Pressur") 
+```
+
+
+# Vapor Pressure Deficit [VPD]:
+$$
+\begin{aligned}
+e_s(T_a) - e_a &= VPD \\
+e_s(T_a) - e_a &= e_s(T_a)(1 - \frac{RH}{100%})
+\end{aligned}
+$$
+VPD is the difference between ambient vapor pressure and vapor pressure at saturation. It is proportional to the rate of evaporation.
+
+
+```{r}
+  rh <- seq (from = 0, to = 100, by = 1)
+  vpd <- e_s * t_a * ( 1 - (rh / 100))
+
+df_vpd <- data_frame(
+  rh = seq (from = 0, to = 100, by = 1),
+  t_a = seq (from = 0, to = 100, by = 1),
+  vpd = e_s * t_a * ( 1 - (rh / 100))
+)
+base_plot %+% df_vpd %+% aes(x = rh, y = vpd) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = "Vapor Pressur Deficit") 
+
+```
+# Overall Flux:
+
+
+
+
+```{r out.width = "80%", echo=FALSE, eval=TRUE}
+knitr::include_graphics("atm_layers.png") 
+```
+
+
+
+
+$$
+\begin{aligned}
+E &\propto \frac{1-h}{r} \\
+r &= r_M + r_T
+\end{aligned}
+$$
+
+
+Normalizing relative humidity, calculating the total flux
+rm = 0.67 according to https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf
+
+```{r}
+rm <- 0.67
+rt <- 0.5
+r <- rm + rt
+rh <- seq (from = 0, to = 1.0, by = 0.01)
+alpha <- 0.98
+rh_norm <- rh / alpha
+e <- (1 - rh) / r
+
+df_e <- data_frame (
+  rm = 0.67,
+  rt = 0.5,
+  rh = seq (from = 0, to = 1.0, by = 0.01),
+  alpha = 0.98,
+  rh_norm = rh / alpha,
+  r = rm + rt,
+  e = (1 - rh) / r 
+)
+
+base_plot %+% df_e %+% aes(x = rh_norm, y = e) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = "Total Flux") 
+
+```
+
+
+# Evaporation Flux:
+  
+  
+$$
+\begin{aligned}
+\delta_E &= \frac{\alpha_{\frac{V}{L}} \cdot \delta_L - h \cdot \delta_A - (\epsilon* + \epsilon_K)}{(1-h) + 10 ^ {-3} \epsilon_K} \\
+\epsilon_K &= (1 - \alpha_K) 10^3 > 0 \\
+\delta_E &= \textrm{ isotopic composition of evaporating vapor} \\
+\delta_L &= \textrm{ isotopic composition of liquid water}\\
+\delta_A &= \textrm{ isotopic composition of the "free atmosphere"}\\
+\end{aligned}
+$$
+Alpha of seawater is 0.98.
+
+
+```{r}
+# Vary alpha_vl, keep alpha_k the same
+alpha_vl <- 0.99
+alpha_k <- 0.98
+del_l <- -5
+del_a <- -6
+e_s <- (1 - alpha_vl) * 10 ^ 3
+e_k <- (1 - alpha_k) * 10 ^ 3
+del_e <- (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
+
+df_dele <- data_frame(
+  alpha_vl = 0.99,
+  alpha_k = 0.98,
+  del_l = -5,
+  del_a = -6,
+  e_s = (1 - alpha_vl) * 10 ^ 3,
+  e_k = (1 - alpha_k) * 10 ^ 3,
+  del_e = (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
+)
+
+base_plot %+% df_dele %+% aes(x = del_e, y = rh) %+% scale_x_continuous(name = "delta e") +
+  scale_y_continuous(name = "Relative Humidity") 
+```
+
+  
+# Improved $eps_k$
+
+  
+  
+$$
+\begin{aligned}
+\epsilon_K &= (1-h)\frac{r_M}{r}(1 - \frac{r_{M,i}}{r_M})10^3 \\
+i & \textrm{ denotes the heavy isotope}
+
+\end{aligned}
+$$
+  
+  
+```{r}
+rh <- seq (from = 0, to = 1.0, by = 0.01)
+rm <- 0.67
+rt <- 1
+r <- rm + rt
+rmi <- 0.95
+eps_k <- (1 - rh) * (rm / r) * (1 - (rmi)) * 10 ^ 3
+
+df_epsk <- data_frame(
+  rh = seq (from = 0, to = 1.0, by = 0.01),
+  rm = 0.67,
+  rt = 0.99,
+  r = rm + rt,
+  rmi = 0.98,
+  eps_k = (1 - rh) * (rm / r) * (1 - (rmi)) * 10 ^ 3
+)
+base_plot %+% df_epsk %+% aes(x = eps_k, y = rh) %+% scale_x_continuous(name = "epsk") +
+  scale_y_continuous(name = "Relative Humidity")
+# Possibiliy display with del_e
+```
+  
+
+  
+  
+# Diffusion Flux 2.0:
+
+$$
+\begin{aligned}
+\epsilon_K &= (1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 \\
+(1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 &\approx \theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) \\
+\theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) &= \theta \cdot (1 - h) \cdot C_K \\
+& Where \\
+C_K &= n (1 - \frac{D_i}{D})10^3 \\
+\theta &= \frac{r_M}{r}
+\end{aligned}
+$$
+
+Paper showing Di
+https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf
+
+```{r}
+n <- 2 / 3
+d <- 0.9691 
+c_k <- n * (1 - d) * 10 ^ 3
+theta <- rm / r
+eps_kimp <- theta * (1 - rh) * c_k
+
+df_epskimp <- data_frame(
+  n = 2 / 3,
+  d = 18 / 16, # 18/16 for the oxygen masses
+  c_k = n * (1 - d) * 10 ^ 3,
+  rm = 0.67,
+  rt = 0.8,
+  r = rm + rt,
+  theta = rm / r,
+  eps_kimp = theta * (1 - rh) * c_k
+)
+base_plot %+% df_epskimp %+% aes(x = eps_kimp, y = del_e) %+% scale_x_continuous(name = "epskimp") +
+  scale_y_continuous(name = "Delta e")
+```
+
+
+
+# Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]
+  
+$$
+\begin{aligned}
+10^3 ln\alpha_\frac{L}{V}(\frac{^{18}O}{^{16}O}) &= -2.0667 - 0.4156(\frac{10^3}{T}) + 1.137(\frac{10^6}{T^2}) \\
+
+\end{aligned}
+$$
+
+
+
+```{r}
+t_a <- seq(from = 223.15, to = 323.15, by = 1)
+
+lna <- (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000
+lna
+
+df_lna <- data_frame(
+  t_a = seq(from = 223.15, to = 323.15, by = 1),
+  lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000
+)
+base_plot %+% df_lna %+% aes(x = lna, y = t_a) %+% scale_x_continuous(name = "lna") +
+  scale_y_continuous(name = "Temp [K]")
+```
+
+
+
+# Isotope Fractionation for 0 - 374C
+$$
+\begin{aligned}
+10^3 ln\alpha_\frac{L}{V}(\frac{^{18}O}{^{16}O}) &= -7.685 + 6.7132(\frac{10^3}{T}) - 1.6664(\frac{10^6}{T^2}) + 0.35041(\frac{10^9}{T}) \\
+
+\end{aligned}
+$$
+
+
+
+```{r}
+t_a <- seq(from = 223.15, to = 323.15, by = 1)
+
+lna2 <- (-7.685 + 6.7132 * ((10 ^ 3) / t_a) - (1.6664 * ((10 ^ 6) / (t_a ^ 2))) + 0.35041 * ((10 ^ 9) / t_a)) / 1000
+lna2
+
+df_lna2 <- data_frame(
+  t_a = seq(from = 223.15, to = 323.15, by = 1),
+  lna2 = (-7.685 + 6.7132 * ((10 ^ 3) / t_a) - (1.6664 * ((10 ^ 6) / (t_a ^ 2))) + 0.35041 * ((10 ^ 9) / t_a)) / 1000
+)
+base_plot %+% df_lna2 %+% aes(x = lna2, y = t_a) %+% scale_x_continuous(name = "lna2") +
+  scale_y_continuous(name = "Temp [K]")
+
+```
+
+
+
+
+
+
+
+
+
+
+
