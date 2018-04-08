@@ -83,6 +83,7 @@ How does temperature change the saturation vapor pressure?
   a <- 611.21
   b <- 17.502
   c <- 240.97
+  p <- 101325
   f <- 1.007 + 3.46 * 10 ^ (-8)
   t_a <- seq (from = 0, to = 100, by = 1)
   e_s <- f * (a * exp((b * t_a - a)/(c + t_a)))
@@ -92,13 +93,14 @@ df_s <- data_frame(
   a = 611.21,
   b = 17.502,
   c = 240.97,
-  f = 1.007 + 3.46 * 10 ^ (-8),
+  p = 101325,
+  f = (1.007 + 3.46 * 10 ^ (-8)) * p,
   t_a = seq (from = 0, to = 100, by = 1),
   e_s = f * (a * exp((b * t_a - a)/(c + t_a)))
 
 )
 base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = "Temperature") +
-  scale_y_continuous(name = "Saturation Vapor Pressur") 
+  scale_y_continuous(name = "Saturation Vapor Pressure") 
 ```
 
 
@@ -200,7 +202,8 @@ del_e <- (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3))
 
 df_dele <- data_frame(
   alpha_vl = 0.99,
-  alpha_k = 0.98,
+  # alpha_k = (0.9691 ^ (1 / 2)),
+  alpha_k = ((18 / 20) ^ (1 / 2)),
   del_l = -5,
   del_a = -6,
   e_s = (1 - alpha_vl) * 10 ^ 3,
@@ -237,7 +240,7 @@ eps_k <- (1 - rh) * (rm / r) * (1 - (rmi)) * 10 ^ 3
 df_epsk <- data_frame(
   rh = seq (from = 0, to = 1.0, by = 0.01),
   rm = 0.67,
-  rt = 0.99,
+  rt = 0.70,
   r = rm + rt,
   rmi = 0.98,
   eps_k = (1 - rh) * (rm / r) * (1 - (rmi)) * 10 ^ 3
@@ -275,7 +278,7 @@ eps_kimp <- theta * (1 - rh) * c_k
 
 df_epskimp <- data_frame(
   n = 2 / 3,
-  d = 18 / 16, # 18/16 for the oxygen masses
+  d = (18 / 20) ^ (1 / 2), # 18/16 for the oxygen masses
   c_k = n * (1 - d) * 10 ^ 3,
   rm = 0.67,
   rt = 0.8,
@@ -304,7 +307,6 @@ $$
 t_a <- seq(from = 223.15, to = 323.15, by = 1)
 
 lna <- (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000
-lna
 
 df_lna <- data_frame(
   t_a = seq(from = 223.15, to = 323.15, by = 1),
