@@ -289,7 +289,33 @@ base_plot %+% df_epskimp %+% aes(x = eps_kimp, y = del_e) %+% scale_x_continuous
   scale_y_continuous(name = "Delta e")
 ```
 
+# Using the improved epsilon k to find delta_e
 
+
+```{r}
+# Vary alpha_vl, keep alpha_k the same
+alpha_vl <- 0.99
+alpha_k <- 0.98
+del_l <- -5
+del_a <- -6
+e_s <- (1 - alpha_vl) * 10 ^ 3
+e_k <- (1 - alpha_k) * 10 ^ 3
+del_e <- (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
+
+df_dele <- data_frame(
+  alpha_vl = 0.99,
+  # alpha_k = (0.9691 ^ (1 / 2)),
+  alpha_k = ((18 / 20) ^ (1 / 2)),
+  del_l = -5,
+  del_a = -6,
+  e_s = (1 - alpha_vl) * 10 ^ 3,
+  e_k = (1 - alpha_k) * 10 ^ 3,
+  del_e = (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
+)
+
+base_plot %+% df_dele %+% aes(x = del_e, y = rh) %+% scale_x_continuous(name = "delta e") +
+  scale_y_continuous(name = "Relative Humidity") 
+```
 
 # Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]
   
