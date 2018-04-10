@@ -1,5 +1,5 @@
 ---
-  title: "Oxygen Fractionation in the Hydrologic Cycle"
+title: "Oxygen Fractionation in the Hydrologic Cycle"
 author: "William Skorski"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
 output:
@@ -84,20 +84,14 @@ How does temperature change the saturation vapor pressure?
   b <- 17.502
   c <- 240.97
   p <- 101325
-  f <- 1.0007 + 3.46 * 10 ^ (-8) * p
-  t_a <- seq (from = 0, to = 100, by = 1)
-  e_s <- f * (a * exp((b * t_a)/(c + t_a)))
-
+  f <- (1.0007 + (3.46 * 10 ^ (-8) * p))
 df_s <- data_frame(
-  a = 611.21,
-  b = 17.502,
-  c = 240.97,
-  p = 101325,
-  f = (1.0007 + 3.46 * 10 ^ (-8)) * p,
-  t_a = seq (from = 0, to = 100, by = 1),
+  t_a = seq (from = 0, to = 45, by = 1),
   e_s = f * (a * exp((b * t_a)/(c + t_a)))
 
 )
+df_s
+
 base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = "Temperature") +
   scale_y_continuous(name = "Saturation Vapor Pressure") 
 ```
@@ -114,15 +108,16 @@ VPD is the difference between ambient vapor pressure and vapor pressure at satur
 
 
 ```{r}
-  rh <- seq (from = 0, to = 100, by = 1)
-  vpd <- e_s * t_a * ( 1 - (rh / 100))
-
-df_vpd <- data_frame(
+df_vpd <- expand.grid(
   rh = seq (from = 0, to = 100, by = 1),
-  t_a = seq (from = 0, to = 100, by = 1),
-  vpd = e_s * t_a * ( 1 - (rh / 100))
-)
-base_plot %+% df_vpd %+% aes(x = t_a, y = vpd) %+% scale_x_continuous(name = "Temperature [C]") +
+  t_a = seq (from = 0, to = 45, by = 5)
+) %>% 
+  mutate(
+    e_s = f * (a * exp((b * t_a)/(c + t_a))),
+    vpd = e_s * ( 1 - (rh / 100))
+  )
+
+base_plot %+% df_vpd %+% aes(x = rh, y = vpd, color = t_a, group = t_a) %+% scale_x_continuous(name = "Relative Humidity") + scale_color_gradient (low = "blue", mid high = "red") +
   scale_y_continuous(name = "Vapor Pressur Deficit") 
 
 ```
@@ -165,7 +160,7 @@ df_e <- data_frame (
   alpha = 0.98,
   rh_norm = rh / alpha,
   r = rm + rt,
-  e = (1 - rh) / r 
+  e = (1 - rh / 100) / r 
 )
 
 base_plot %+% df_e %+% aes(x = rh_norm, y = e) %+% scale_x_continuous(name = "Relative Humidity") +
@@ -174,7 +169,7 @@ base_plot %+% df_e %+% aes(x = rh_norm, y = e) %+% scale_x_continuous(name = "Re
 ```
 
 
-# Evaporation Flux:
+# Evaporation Flux: $\delta_e$
   
   
 $$
@@ -190,28 +185,21 @@ Alpha of seawater is 0.98.
 
 
 ```{r}
-# Vary alpha_vl, keep alpha_k the same
-alpha_vl <- 0.99
-alpha_k <- 0.98
-del_l <- -5
-del_a <- -6
-e_s <- (1 - alpha_vl) * 10 ^ 3
-e_k <- (1 - alpha_k) * 10 ^ 3
-del_e <- (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
 
 df_dele <- data_frame(
-  alpha_vl = 0.99,
-  # alpha_k = (0.9691 ^ (1 / 2)),
-  alpha_k = ((18 / 20) ^ (1 / 2)),
-  del_l = -5,
-  del_a = -6,
-  e_s = (1 - alpha_vl) * 10 ^ 3,
-  e_k = (1 - alpha_k) * 10 ^ 3,
-  del_e = (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
+  alpha_vl = 0.991,
+  alpha_k = 0.995,
+  rh = seq (from = 0, to =100, by = 1),
+  # alpha_k = ((18 / 20) ^ (1 / 2)),
+  del_l = 0,
+  del_a = -20,
+  eps_vl = 9,
+  e_k = 5,
+  del_e = (alpha_vl * del_l - rh / 100 * del_a - (eps_vl + e_k)) / ((1 - rh / 100) + e_k * 0.001)
 )
-
-base_plot %+% df_dele %+% aes(x = del_e, y = rh) %+% scale_x_continuous(name = "delta e") +
-  scale_y_continuous(name = "Relative Humidity") 
+df_dele
+base_plot %+% df_dele %+% aes(x = rh, y = del_e) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = latex2exp::TeX("$\\delta_e$"))
 ```
 
   
@@ -229,23 +217,16 @@ $$
   
   
 ```{r}
-rh <- seq (from = 0, to = 1.0, by = 0.01)
-rm <- 0.67
-rt <- 1
-r <- rm + rt
-rmi <- 0.95
-eps_k <- (1 - rh) * (rm / r) * (1 - (rmi)) * 10 ^ 3
-
 df_epsk <- data_frame(
-  rh = seq (from = 0, to = 1.0, by = 0.01),
+  rh = seq (from = 0, to = 100, by = 1),
   rm = 0.67,
   rt = 0.70,
   r = rm + rt,
   rmi = 0.98,
-  eps_k = (1 - rh) * (rm / r) * (1 - (rmi)) * 10 ^ 3
+  eps_k = (1 - rh / 100) * (rm / r) * (1 - (rmi)) * 10 ^ 3
 )
-base_plot %+% df_epsk %+% aes(x = eps_k, y = rh) %+% scale_x_continuous(name = "epsk") +
-  scale_y_continuous(name = "Relative Humidity")
+base_plot %+% df_epsk %+% aes(x = rh, y = eps_k) %+% scale_x_continuous(name = "rh") +
+  scale_y_continuous(name = "epsk")
 # Possibiliy display with del_e
 ```
   
@@ -269,13 +250,8 @@ Paper showing Di
 https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf
 
 ```{r}
-n <- 1 / 2
-d <- 0.9691 
-c_k <- n * (1 - d) * 10 ^ 3
-theta <- rm / r
-eps_kimp <- theta * (1 - rh) * c_k
-
 df_epskimp <- data_frame(
+  rh = seq(0, 100, by = 1),
   n = 1 / 2,
   d = (18 / 20) ^ (1 / 2), # 18/16 for the oxygen masses
   c_k = n * (1 - d) * 10 ^ 3,
@@ -283,38 +259,38 @@ df_epskimp <- data_frame(
   rt = 0.8,
   r = rm + rt,
   theta = rm / r,
-  eps_kimp = theta * (1 - rh) * c_k
+  eps_kimp = theta * (1 - rh / 100) * c_k
 )
-base_plot %+% df_epskimp %+% aes(x = eps_kimp, y = del_e) %+% scale_x_continuous(name = "epskimp") +
-  scale_y_continuous(name = "Delta e")
+base_plot %+% df_epskimp %+% aes(x = rh, y = eps_kimp) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = "eps k imp")
 ```
 
 # Using the improved epsilon k to find delta_e
 
+scale to dele = -50
+start at 75? What happens at 100?
 
 ```{r}
-# Vary alpha_vl, keep alpha_k the same
-alpha_vl <- 0.99
-alpha_k <- 0.98
-del_l <- -5
-del_a <- -6
-e_s <- (1 - alpha_vl) * 10 ^ 3
-e_k <- (1 - alpha_k) * 10 ^ 3
-del_e <- (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
-
-df_dele <- data_frame(
+df_dele_complete <- data_frame(
   alpha_vl = 0.99,
-  # alpha_k = (0.9691 ^ (1 / 2)),
-  alpha_k = ((18 / 20) ^ (1 / 2)),
-  del_l = -5,
-  del_a = -6,
+  alpha_k = (0.9691),
+  # alpha_k = ((18 / 20) ^ (1 / 2)),
+  del_l = 0,
+  del_a = -20,
   e_s = (1 - alpha_vl) * 10 ^ 3,
-  e_k = (1 - alpha_k) * 10 ^ 3,
-  del_e = (alpha_vl * del_l * rh * del_a - (e_s + e_k)) / ((1 - rh) + (10 ^ (-3)) * e_k)
+  rh = seq(0, 100, by = 1),
+  n = 1 / 2,
+  d = (18 / 20) ^ (1 / 2), # 18/16 for the oxygen masses
+  c_k = n * (1 - d) * 10 ^ 3,
+  rm = 0.67,
+  rt = 0.8,
+  r = rm + rt,
+  theta = rm / r,
+  eps_kimp = theta * (1 - rh / 100) * c_k,
+  del_e = (alpha_vl * del_l - rh / 100 * del_a - (e_s + eps_kimp)) / ((1 - rh / 100) + (10 ^ (-3)) * eps_kimp)
 )
-
-base_plot %+% df_dele %+% aes(x = del_e, y = rh) %+% scale_x_continuous(name = "delta e") +
-  scale_y_continuous(name = "Relative Humidity") 
+base_plot %+% df_dele_complete %+% aes(x = rh, y = del_e) %+% scale_x_continuous(name = "RH") +
+  scale_y_continuous(name = "dele") 
 ```
 
 # Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]
@@ -335,11 +311,24 @@ lna <- (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 
 
 df_lna <- data_frame(
   t_a = seq(from = 223.15, to = 323.15, by = 1),
-  lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000
+  lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000,
+  alpha = (exp(lna))
 )
-base_plot %+% df_lna %+% aes(x = lna, y = t_a) %+% scale_x_continuous(name = "lna") +
-  scale_y_continuous(name = "Temp [K]")
+base_plot %+% df_lna %+% aes(x = t_a - 273.15, y = 1/alpha) %+% 
+  scale_y_continuous(name = "alpha", sec.axis = sec_axis(trans = ~(1 - .)*1000, name = "eps")) +
+  scale_x_continuous(name = "Temp [C]")
 ```
+
+
+
+
+craig and gordon equation 18, 1965, page 35
+
+
+
+discussion questions
+
+
 
 
 
