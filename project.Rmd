@@ -1,5 +1,5 @@
 ---
-  title: "Oxygen Fractionation in the Hydrologic Cycle"
+title: "Oxygen Fractionation in the Hydrologic Cycle"
 author: "William Skorski"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
 output:
@@ -18,11 +18,7 @@ library(tidyverse)
 library(latex2exp)
 knitr::opts_chunk$set(eval = FALSE)
 ```
-
-### maybe use plotly 
-
-# Setting up the model
-
+### Setting up the model
 
 ## Base plot
 
@@ -45,27 +41,26 @@ knitr::opts_chunk$set(eval = FALSE)
 #' @param c_k 
 #' @param n soil thickness
 #' @param eps
-#' @param 
-#' @param 
-#' @param 
-
-# calc_dole_effect <- function(f_m, eps_pm, eps_rm, eps_pl, eps_rl, eps_ex, eps_evap, eps_meteoric, strat_flux_m) {
-  # f_m * (eps_pm - eps_rm) + (1 - f_m) * (eps_meteoric + eps_evap + eps_pl - eps_rl) + strat_flux_m * eps_ex }
+#' @param eps_kimp Calcualted epsilon_k
+#' @param rmi Combined term of rmi/rm
+#' @param theta
+#' @param alpha
+#' @param lna
 
 # base plot we will use for plotting
 base_plot <- ggplot() + 
   aes(x = t_a, y = e_s) +
   geom_line() + 
-  # scale_x_continuous(name = "temperature") +
-  # scale_y_continuous(name = "saturation vapor pressure") +
   theme_gray()
 ```
 
-## Here are the equations in full:
+```{r out.width = "80%", echo=FALSE, eval=TRUE}
+knitr::include_graphics("Hydrologic_Cycle.png") 
+```
 
-# Temperature Effect:
-# Saturation Vapor Pressure of pure water $e_s(T)$:
-  
+
+## Temperature Effect: Saturation Vapor Pressure of pure water $e_{s(T)}$:
+
 
 $$
 \begin{aligned}
@@ -77,32 +72,32 @@ c &= 240.97 \\
 f &= 1.0007 + 3.46 \times 10 ^ {-8} P
 \end{aligned}
 $$
-How does temperature change the saturation vapor pressure?
+
+# Question 1:
+How does temperature change the saturation vapor pressure? Do you expect a higher saturation vapor pressure at higher or lower temperatures? Why?
+
+
 
 ```{r}
-  a <- 611.21
-  b <- 17.502
-  c <- 240.97
-  f <- 1.007 + 3.46 * 10 ^ (-8)
-  t_a <- seq (from = 0, to = 100, by = 1)
-  e_s <- f * (a * exp((b * t_a - a)/(c + t_a)))
-
-
+# Plug in constants from equation
+# P = 1 atm = 101325 Pa
+# Vary temperature from -20 - +45
+  a <- 
+  b <- 
+  c <- 
+  p <- 
+  f <- 
 df_s <- data_frame(
-  a = 611.21,
-  b = 17.502,
-  c = 240.97,
-  f = 1.007 + 3.46 * 10 ^ (-8),
-  t_a = seq (from = 0, to = 100, by = 1),
-  e_s = f * (a * exp((b * t_a - a)/(c + t_a)))
-
+  t_a = 
+  e_s = f * (a * exp((b * t_a)/(c + t_a)))
 )
-base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = "Temperature") +
-  scale_y_continuous(name = "Saturation Vapor Pressur") 
+
+base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = "Temperature [C]") +
+  scale_y_continuous(name = "Saturation Vapor Pressure [Pa]") 
 ```
 
 
-# Vapor Pressure Deficit [VPD]:
+## Vapor Pressure Deficit [VPD]:
 $$
 \begin{aligned}
 e_s(T_a) - e_a &= VPD \\
@@ -111,63 +106,38 @@ e_s(T_a) - e_a &= e_s(T_a)(1 - \frac{RH}{100%})
 $$
 VPD is the difference between ambient vapor pressure and vapor pressure at saturation. It is proportional to the rate of evaporation.
 
+# Question 2A:
+Assuming a constant relative humidity, how does the VPD change with temperature?
+
+
+# Question 2B:
+Assuming a constant temperature, how does the VPD change with relative humidity?
+
+
 
 ```{r}
-  rh <- seq (from = 0, to = 100, by = 1)
-  vpd <- (e_s * t_a * ( 1 - (rh / 100))) / 1000
+# Use expand.grid so you can vary both temperature and relative humidity
+df_vpd <- expand.grid(
+  rh = 
+  t_a = 
+) %>% 
+  # Mutate df_vpd to then calculate e_s and vpd
+  mutate(
+    e_s = f * (a * exp((b * t_a)/(c + t_a))),
+    vpd = e_s * ( 1 - (rh / 100))
+  )
 
-df_vpd <- data_frame(
-  rh = seq (from = 0, to = 100, by = 1),
-  t_a = seq (from = 0, to = 100, by = 1),
-  vpd = (e_s * t_a * ( 1 - (rh / 100))) / 1000
-)
-base_plot %+% df_vpd %+% aes(x = rh, y = vpd) %+% scale_x_continuous(name = "Relative Humidity") +
+base_plot %+% df_vpd %+% aes(x = rh, y = vpd, color = t_a, group = t_a) %+% scale_x_continuous(name = "Relative Humidity") + scale_color_gradient (low = "blue", high = "red") +
   scale_y_continuous(name = "Vapor Pressur Deficit") 
-
 ```
-
-
-
-
-
-```{r} 
-# # TRYING TO COMBINE 2 DATA FRAMES TO BE ON THE SAME GRAPH - VPD AND TEMPERATURE
-# vpd_t <- bind_rows(
-#   df_s %>% mutate(pathway = "df_s")
-#   df_vpd %>% mutate(pathway = "df_vpd")
-#   
-# )
-# 
-# base_plot %+% vpd_t %+% aes(x = rh, y = vpd) %+% scale_x_continuous(name = "Relative Humidity") +
-#   scale_y_continuous(name = "Vapor Pressur Deficit") 
-# 
-
-```
-
-Temperature on x, VPD on Y
-
-```{r}
-
-base_plot %+% df_vpd %+% aes(x = t_a, y = vpd) %+% scale_x_continuous(name = "Relative Humidity") +
-  scale_y_continuous(name = "Vapor Pressur Deficit") 
-
-```
-
-
-
-
-
-# Overall Flux:
-
-
-
+## Overall Flux:
 
 ```{r out.width = "80%", echo=FALSE, eval=TRUE}
 knitr::include_graphics("atm_layers.png") 
 ```
 
 
-
+The overall flux describes the flux of water between the water surface and the bottom of the free air above the turbulent layer.
 
 $$
 \begin{aligned}
@@ -175,64 +145,42 @@ E &\propto \frac{1-h}{r} \\
 r &= r_M + r_T
 \end{aligned}
 $$
+
+# Question 3:
+How does the total flux change with different rt and rm values? How about relative humidity?
+
+
+
+$$
+\textrm{From the following source, assume:} \\
+\begin{aligned}
+\textrm{alpha} &= 0.98 \\
+\textrm {rm} &= 0.67 \\
+\end{aligned} \\
+$$
+$\href{https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf}{\textrm{Isotopic enrichment of liquid water during evaporation from water surfaces}}$
+
 ```{r}
-rm <- 0.67
-rt <- 0.6
-r <- rm + rt
-rh <- seq (from = 0, to = 100, by = 1)
-alpha <- .98
-rhh <- rh / alpha
-e <- (1 - rhh) / r
-
-df_e <- data_frame(
-  rm = 0.67,
-  rt = 0.6,
-  r = rm + rt,
-  rh = seq (from = 0, to = 100, by = 1),
-  alpha = .98,
-  rhh = rh / alpha,
-  e = (1 - rh) / r
-
+# Use 0.67 for rm, and assume an rt value
+# normalize the relative humidity by using the above relationship
+df_e <- data_frame (
+  rm = 
+  rt = 
+  rh = 
+  alpha = 
+  rh_norm = 
+  r = 
+  # Divide rh_norm by 100 when calculating e
+  e = (1 - rh_norm / 100) / r 
 )
 
-base_plot %+% df_e %+% aes(x = e, y = r) %+% scale_x_continuous(name = "Total Flux") +
-  scale_y_continuous(name = "r") 
+base_plot %+% df_e %+% aes(x = rh_norm, y = e) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = "Total Flux") 
 
 ```
 
+## Evaporation Flux: $\delta_e$
 
-
-
-
-
-```{r}
-rm <- seq(from = 0, to = 1, by = 0.01)
-rt <- 1 - rm
-r <- rm + rt
-e <- (1 - rh) / r
-
-df_e <- data_frame(
-  rm = seq(from = 0, to = 1, by = 0.01),
-  rt = 1 - rm,
-  r = rm + rt,
-  e = (1 - rh) / r
-
-)
-
-base_plot %+% df_e %+% aes(x = e, y = r) %+% scale_x_continuous(name = "Total Flux") +
-  scale_y_continuous(name = "r") 
-
-```
-  
-  
-  
-  
-  
-  
-
-# Evaporation Flux:
-  
-  
 $$
 \begin{aligned}
 \delta_E &= \frac{\alpha_{\frac{V}{L}} \cdot \delta_L - h \cdot \delta_A - (\epsilon* + \epsilon_K)}{(1-h) + 10 ^ {-3} \epsilon_K} \\
@@ -242,209 +190,169 @@ $$
 \delta_A &= \textrm{ isotopic composition of the "free atmosphere"}\\
 \end{aligned}
 $$
-Alpha of seawater is 0.98.
-```{r}
-# Vary alpha_vl, keep alpha_k the same
-alpha_k <- 0.95
-alpha_vl <- 0.9
-alpha <- .98
-eps <- ((1 - alpha) * 10 ^ 3)
-eps_k <- ((1 - alpha_k) * 10^3)
-del_l <- 0
-del_a <- -25
 
-del_e <- ((alpha_vl * del_l - rh * del_a -(eps + eps_k)) / ((1 - rh) + 10^(-3) * eps_k))
+$$
+\textrm{Using values from Craig and Gordon, 1965:} \\
+\begin{aligned}
+\textrm{alpha_vl} &= 0.991 \\
+\textrm{alpha_k} &= 0.995 \\
+\textrm{eps_vl} &= 9 \\
+\textrm{e_k} &= 5 \\
+\textrm{Assume:} \\
+\textrm{del_l} &= 0 \\
+\textrm{del_a} &= -12, -20
+\end{aligned}
+$$
 
-
-df_del_e <- data_frame (
-del_e = ((alpha_vl * del_l - rh * del_a -(eps + eps_k)) / ((1 - rh) + 10^(-3) * eps_k))
-)
-
-base_plot %+% df_del_e %+% aes(x = del_e, y = rh) %+% scale_x_continuous(name = "Delta evaporating water [per mil]", limits = c(-50,50)) +
-  scale_y_continuous(name = "Relative Humidity [%]")
-
-# atex2exp::TeX("$\\delta_{\\text{ evaporating water}}$"),
-```
+# Question 4A:
+How does the starting delta value of the atmosphere combined with the relative humididty affec the delta of the evaporated water?
 
 
 
-
-
+# Question 4B:
+What happens at very high relative humidities?
+What happens if the starting delta values are changed [E.G. $\\delta_a =$ -5]?
 
 
 
 ```{r}
-alpha_k <- seq(from = 0.9, to = 1.1, by = 0.01)
-alpha_vl <- seq(from = 0.9, to = 1.1, by = 0.01)
-alpha <- seq(from = 0.9, to = 1.1, by = 0.01)
-eps <- ((1 - alpha) * 10 ^ 3)
-eps_k <- ((1 - alpha_k) * 10^3)
-del_l <- seq(from = -50, to = 50, by = 1)
-del_a <- seq(from = -50, to = 50, by = 1)
-
-del_e <- ((alpha_vl * del_l - rh * del_a -(eps + eps_k)) / ((1 - rh) + 10^(-3) * eps_k))
-
-df_del_e <- data_frame (
-del_e = ((alpha_vl * del_l - rh * del_a -(eps + eps_k)) / ((1 - rh) + 10^(-3) * eps_k))
+# Use expand.grid again to vary rh and have 2 values for del_a
+# First have rh range from 0 - 75
+df_dele <- 
+  expand.grid(
+    rh = 
+    del_a = 
+  ) %>% 
+  mutate(
+    alpha_vl =
+    alpha_k = 
+    del_l = 
+    eps_vl = 
+    e_k = 
+    del_e = (alpha_vl * del_l - rh / 100 * del_a - (eps_vl + e_k)) / ((1 - rh / 100) + e_k * 0.001) 
 )
-
-base_plot %+% df_del_e %+% aes(x = del_e, y = rh) %+% scale_x_continuous(name = "Delta evaporating water [per mil]", limits = c(-10,200)) +
-  scale_y_continuous(name = "Relative Humidity [%]")
-
-# atex2exp::TeX("$\\delta_{\\text{ evaporating water}}$"),
+base_plot %+% df_dele %+% aes(x = rh, y = del_e, color = factor(del_a)) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = latex2exp::TeX("$\\delta_e$"))
 ```
+## Improved $\epsilon_k$
 
-
-
-
-  
-
-  
-# Improved $eps_k$
-
-  
-  
 $$
 \begin{aligned}
 \epsilon_K &= (1-h)\frac{r_M}{r}(1 - \frac{r_{M,i}}{r_M})10^3 \\
 i & \textrm{ denotes the heavy isotope}
-
 \end{aligned}
 $$
-  
+
+$$
+\textrm{Assume:} \\
+\begin{aligned}
+\frac{r_{M,i}}{r_M} &= 0.98 \\
+\end{aligned}
+$$
+# Question 5:
+How does $\epsilon_k$ vary with relative humidity? How does $\epsilon_k$? vary with rt?
+
+
+
   
 ```{r}
-
-rm <- 0.67
-rmi <- .6
-rt <- 1
-r <- rm + rt
-eps_kimp <- (1 - rh) * (rm / r) * (1 - (rmi / rm) * 10 ^ 3)
-
-df_epskimp <- data_frame(
-  eps_kimp = (1 - rh) * (rm / r) * (1 - (rmi / rm) * 10 ^ 3)
-  )
-
-base_plot %+% df_epskimp %+% aes(x = eps_kimp, y = rh) %+% scale_x_continuous(name = "Delta evaporating water [per mil]") +
-  scale_y_continuous(name = "Relative Humidity [%]")
+# rm is still 0.67
+# Choose rt
+df_epsk <- data_frame(
+  rh = 
+  rm = 
+  rt = 
+  r = 
+  rmi = 
+  eps_k = (1 - rh / 100) * (rm / r) * (1 - (rmi)) * 10 ^ 3
+)
+base_plot %+% df_epsk %+% aes(x = rh, y = eps_k) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = latex2exp::TeX("$\\epsilon_k$"))
 ```
-  
-  
-  
-  
-  
-  
-# Diffusion Flux 2.0:
+
+## Diffusion Flux 2.0:
 
 $$
 \begin{aligned}
 \epsilon_K &= (1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 \\
 (1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 &\approx \theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) \\
 \theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) &= \theta \cdot (1 - h) \cdot C_K \\
+\\
+\\
+\textrm{Solve: } \ & \epsilon_K = \ \theta \cdot (1 - h) \cdot C_K \\
 & Where \\
 C_K &= n (1 - \frac{D_i}{D})10^3 \\
-\theta &= \frac{r_M}{r}
+\theta &= \frac{r_M}{r} \\
+\frac{D_i}{D} &= \frac{M}{M_i} ^ {1/2} \\
 \end{aligned}
 $$
 
-Paper showing Di
-https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf
+```{r}
+df_epskimp <- data_frame(
+  rh = 
+  n = 
+  d = 
+  c_k = 
+  rm = 
+  rt =
+  r = 
+  theta = 
+  eps_kimp = theta * (1 - rh / 100) * c_k
+)
+base_plot %+% df_epskimp %+% aes(x = rh, y = eps_kimp) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = latex2exp::TeX("$\\epsilon_k$"))
+```
+
+# Using the improved $\epsilon_k$ to find $\delta_e$:
+
+# Question 6:
+What happens when relative humidity goes above 75%?
+
+
 
 ```{r}
-
-theta <- 0.98
-di <- 0.9691
-n <- .5
-c_k <- n * ((1 - di ) * 10 ^ 3)
-
-
-
-eps_k <- ((1 - rh) * (rm / r) * (1 - ((di) ^ n)) * 10 ^ 3)
-eps_kapprox <- theta * (1 - rh) * c_k
-
-df_epsk <- data_frame(
-  eps_k = ((1 - rh) * (rm / r) * (1 - ((di) ^ n)) * 10 ^ 3)
+df_dele_complete <- expand.grid(
+  rh = seq (from = 0, to = 75, by = 1),
+  del_a = c(-12, -20)
+) %>%
+  mutate(
+  alpha_vl = 
+  alpha_k = 
+  del_l = 
+  e_s = 
+  n =
+  d = 
+  c_k = 
+  rm = 
+  rt = 
+  r = 
+  theta = 
+  eps_kimp = 
+  del_e = (alpha_vl * del_l - rh / 100 * del_a - (e_s + eps_kimp)) / ((1 - rh / 100) + (10 ^ (-3)) * eps_kimp)
 )
-base_plot %+% df_epsk %+% aes(x = eps_k, y = rh) %+% scale_x_continuous(name = "Delta evaporating water [per mil]", limits = c(-10,200)) +
-  scale_y_continuous(name = "Relative Humidity [%]")
+base_plot %+% df_dele_complete %+% aes(x = rh, y = del_e, color = factor(del_a)) %+% scale_x_continuous(name = "Relative Humidity") +
+  scale_y_continuous(name = latex2exp::TeX("$\\delta_e$"))
 ```
-  
 
-  
-  
-
-
-
-
-
-
-# Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]
+# Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]:
   
 $$
 \begin{aligned}
 10^3 ln\alpha_\frac{L}{V}(\frac{^{18}O}{^{16}O}) &= -2.0667 - 0.4156(\frac{10^3}{T}) + 1.137(\frac{10^6}{T^2}) \\
-
-
 \end{aligned}
 $$
 
 
 
 ```{r}
-t_a <- seq(from = 273.15, to = 373.15, by = 1)
-equil <- (-2.0667 - 0.4156 * ((10 ^ 3)/t_a) + 1.137 * ((10 ^ 6)/t^2))
-
-equil1 <- exp ((-2.0667 - 0.4156 * ((10 ^ 3)/t_a) + 1.137 * ((10 ^ 6)/t^2)) / 10 ^ 3)
-
-df_equil <- data_frame(
-  equil1 = exp ((-2.0667 - 0.4156 * ((10 ^ 3)/t_a) + 1.137 * ((10 ^ 6)/t^2)) / 10 ^ 3)
-
+# Defining the temperature range in Kelvin
+df_lna <- data_frame(
+  t_a = seq(from = 253.15, to = 323.15, by = 1),
+  lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000,
+  alpha = (exp(lna))
 )
-
-base_plot %+% df_equil %+% aes(x = t_a, y = equil1) %+% scale_x_continuous(name = "Temperature (K)", limits = c(0,500)) +
-  scale_y_continuous(name = "Relative Humidity [%]")
-```
-
-
-
-
-
-
-
-
-
-
-# Isotope Fractionation for 0 - 374C
-$$
-\begin{aligned}
-10^3 ln\alpha_\frac{L}{V}(\frac{^{18}O}{^{16}O}) &= -7.685 + 6.7132(\frac{10^3}{T}) - 1.6664(\frac{10^6}{T^2}) + 0.35041(\frac{10^9}{T}) \\
-
-\end{aligned}
-$$
-
-
-
-```{r}
-
-equil3 <- -7.685 + 6.7132 * (10 ^ 3 / t_a) - 1.6663 * (10 ^ 6 / t_a ^ 2) + 0.35041 * (10 ^ 9 / t_a)
-
-df_equil3 <- data_frame(
-  equil3 =  -7.685 + 6.7132 * (10 ^ 3 / t_a) - 1.6663 * (10 ^ 6 / t_a ^ 2) + 0.35041 * (10 ^ 9 / t_a)
-)
+base_plot %+% df_lna %+% aes(x = t_a - 273.15, y = 1/alpha) %+% 
+  scale_x_continuous(name = "Temp [C]") +
+  scale_y_continuous(name = "alpha", sec.axis = sec_axis(trans = ~(1 - .)*1000, name = "eps"))
   
-base_plot %+% df_equil3 %+% aes(x = t_a, y = equil3) %+% scale_x_continuous(name = "Temperature (K)", limits = c(-50,100)) +
-  scale_y_continuous(name = "Relative Humidity [%]")
-
 ```
-
-
-
-
-
-
-
-
-
-
-
-
