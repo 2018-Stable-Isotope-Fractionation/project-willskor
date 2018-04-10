@@ -84,19 +84,18 @@ How does temperature change the saturation vapor pressure?
   b <- 17.502
   c <- 240.97
   p <- 101325
-  f <- 1.007 + 3.46 * 10 ^ (-8)
+  f <- 1.0007 + 3.46 * 10 ^ (-8) * p
   t_a <- seq (from = 0, to = 100, by = 1)
-  e_s <- f * (a * exp((b * t_a - a)/(c + t_a)))
-
+  e_s <- f * (a * exp((b * t_a)/(c + t_a)))
 
 df_s <- data_frame(
   a = 611.21,
   b = 17.502,
   c = 240.97,
   p = 101325,
-  f = (1.007 + 3.46 * 10 ^ (-8)) * p,
+  f = (1.0007 + 3.46 * 10 ^ (-8)) * p,
   t_a = seq (from = 0, to = 100, by = 1),
-  e_s = f * (a * exp((b * t_a - a)/(c + t_a)))
+  e_s = f * (a * exp((b * t_a)/(c + t_a)))
 
 )
 base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = "Temperature") +
@@ -123,7 +122,7 @@ df_vpd <- data_frame(
   t_a = seq (from = 0, to = 100, by = 1),
   vpd = e_s * t_a * ( 1 - (rh / 100))
 )
-base_plot %+% df_vpd %+% aes(x = rh, y = vpd) %+% scale_x_continuous(name = "Relative Humidity") +
+base_plot %+% df_vpd %+% aes(x = t_a, y = vpd) %+% scale_x_continuous(name = "Temperature [C]") +
   scale_y_continuous(name = "Vapor Pressur Deficit") 
 
 ```
@@ -154,7 +153,7 @@ rm = 0.67 according to https://xleelab.sites.yale.edu/sites/default/files/files/
 rm <- 0.67
 rt <- 0.5
 r <- rm + rt
-rh <- seq (from = 0, to = 1.0, by = 0.01)
+rh <- seq (from = 0, to = 100, by = 1)
 alpha <- 0.98
 rh_norm <- rh / alpha
 e <- (1 - rh) / r
@@ -162,7 +161,7 @@ e <- (1 - rh) / r
 df_e <- data_frame (
   rm = 0.67,
   rt = 0.5,
-  rh = seq (from = 0, to = 1.0, by = 0.01),
+  rh = seq (from = 0, to = 100, by = 1),
   alpha = 0.98,
   rh_norm = rh / alpha,
   r = rm + rt,
@@ -270,14 +269,14 @@ Paper showing Di
 https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf
 
 ```{r}
-n <- 2 / 3
+n <- 1 / 2
 d <- 0.9691 
 c_k <- n * (1 - d) * 10 ^ 3
 theta <- rm / r
 eps_kimp <- theta * (1 - rh) * c_k
 
 df_epskimp <- data_frame(
-  n = 2 / 3,
+  n = 1 / 2,
   d = (18 / 20) ^ (1 / 2), # 18/16 for the oxygen masses
   c_k = n * (1 - d) * 10 ^ 3,
   rm = 0.67,
