@@ -46,12 +46,7 @@ knitr::opts_chunk$set(eval = FALSE)
 #' @param rmi
 #' @param theta
 #' @param alpha
-#' @param 
-#' @param 
-#' @param 
-
-# calc_dole_effect <- function(f_m, eps_pm, eps_rm, eps_pl, eps_rl, eps_ex, eps_evap, eps_meteoric, strat_flux_m) {
-  # f_m * (eps_pm - eps_rm) + (1 - f_m) * (eps_meteoric + eps_evap + eps_pl - eps_rl) + strat_flux_m * eps_ex }
+#' @param lna
 
 # base plot we will use for plotting
 base_plot <- ggplot() + 
@@ -60,10 +55,13 @@ base_plot <- ggplot() +
   theme_gray()
 ```
 
-## Here are the equations in full:
+```{r out.width = "80%", echo=FALSE, eval=TRUE}
+knitr::include_graphics("Hydrologic_Cycle.png") 
+```
+
 
 ## Temperature Effect: Saturation Vapor Pressure of pure water $e_{s(T)}$:
-  
+
 
 $$
 \begin{aligned}
@@ -148,6 +146,7 @@ E &\propto \frac{1-h}{r} \\
 r &= r_M + r_T
 \end{aligned}
 $$
+
 # Question 3:
 How does the total flux change with different rt and rm values? How about relative humidity?
 
@@ -204,6 +203,7 @@ $$
 \textrm{del_a} &= -12, -20
 \end{aligned}
 $$
+
 # Question 4A:
 How does the starting delta value of the atmosphere combined with the relative humididty affec the delta of the evaporated water?
 
@@ -234,7 +234,7 @@ df_dele <-
 base_plot %+% df_dele %+% aes(x = rh, y = del_e, color = factor(del_a)) %+% scale_x_continuous(name = "Relative Humidity") +
   scale_y_continuous(name = latex2exp::TeX("$\\delta_e$"))
 ```
-## Improved $eps_k$
+## Improved $\epsilon_k$
 
 $$
 \begin{aligned}
@@ -250,7 +250,7 @@ $$
 \end{aligned}
 $$
 # Question 5:
-How does $\\epsilon_k$ vary with relative humidity? How does varying rt change $\\epsilon_k$?
+How does $\epsilon_k$ vary with relative humidity? How does $\epsilon_k$? vary with rt?
 
 
 
@@ -277,6 +277,8 @@ $$
 \epsilon_K &= (1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 \\
 (1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 &\approx \theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) \\
 \theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) &= \theta \cdot (1 - h) \cdot C_K \\
+\\
+\\
 \textrm{Solve: } \ & \epsilon_K = \ \theta \cdot (1 - h) \cdot C_K \\
 & Where \\
 C_K &= n (1 - \frac{D_i}{D})10^3 \\
@@ -284,10 +286,6 @@ C_K &= n (1 - \frac{D_i}{D})10^3 \\
 \frac{D_i}{D} &= \frac{M}{M_i} ^ {1/2} \\
 \end{aligned}
 $$
-# Question 6:
-
-
-
 
 ```{r}
 df_epskimp <- data_frame(
@@ -302,12 +300,12 @@ df_epskimp <- data_frame(
   eps_kimp = theta * (1 - rh / 100) * c_k
 )
 base_plot %+% df_epskimp %+% aes(x = rh, y = eps_kimp) %+% scale_x_continuous(name = "Relative Humidity") +
-  scale_y_continuous(name = "eps k imp")
+  scale_y_continuous(name = latex2exp::TeX("$\\epsilon_k$"))
 ```
 
-# Using the improved epsilon k to find delta_e
+# Using the improved $\epsilon_k$ to find $\delta_e$:
 
-# Question :
+# Question 6:
 What happens when relative humidity goes above 75%?
 
 
@@ -336,42 +334,25 @@ base_plot %+% df_dele_complete %+% aes(x = rh, y = del_e, color = factor(del_a))
   scale_y_continuous(name = latex2exp::TeX("$\\delta_e$"))
 ```
 
-# Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]
+# Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]:
   
 $$
 \begin{aligned}
 10^3 ln\alpha_\frac{L}{V}(\frac{^{18}O}{^{16}O}) &= -2.0667 - 0.4156(\frac{10^3}{T}) + 1.137(\frac{10^6}{T^2}) \\
-
 \end{aligned}
 $$
 
 
 
 ```{r}
-t_a <- seq(from = 223.15, to = 323.15, by = 1)
-
-lna <- (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000
-
+# Defining the temperature range in Kelvin
 df_lna <- data_frame(
-  t_a = seq(from = 223.15, to = 323.15, by = 1),
+  t_a = seq(from = 253.15, to = 323.15, by = 1),
   lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000,
   alpha = (exp(lna))
 )
 base_plot %+% df_lna %+% aes(x = t_a - 273.15, y = 1/alpha) %+% 
-  scale_y_continuous(name = "alpha", sec.axis = sec_axis(trans = ~(1 - .)*1000, name = "eps")) +
-  scale_x_continuous(name = "Temp [C]")
+  scale_x_continuous(name = "Temp [C]") +
+  scale_y_continuous(name = "alpha", sec.axis = sec_axis(trans = ~(1 - .)*1000, name = "eps"))
+  
 ```
-
-
-
-
-
-
-
-craig and gordon equation 18, 1965, page 35
-
-
-
-discussion questions
-
-
