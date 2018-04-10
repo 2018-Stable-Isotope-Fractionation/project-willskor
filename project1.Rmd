@@ -41,9 +41,8 @@ knitr::opts_chunk$set(eval = FALSE)
 #' @param c_k 
 #' @param n soil thickness
 #' @param eps
-#' @param eps_k
-#' @param eps_kimp
-#' @param rmi
+#' @param eps_kimp Calcualted epsilon_k
+#' @param rmi Combined term of rmi/rm
 #' @param theta
 #' @param alpha
 #' @param lna
@@ -171,6 +170,7 @@ df_e <- data_frame (
   alpha = 0.98,
   rh_norm = rh / alpha,
   r = rm + rt,
+  # Divide rh_norm by 100 when calculating e
   e = (1 - rh_norm / 100) / r 
 )
 
@@ -317,7 +317,7 @@ df_dele_complete <- expand.grid(
 ) %>%
   mutate(
   alpha_vl = 0.99,
-  alpha_k = (0.9691),
+  alpha_k = 0.9691,
   del_l = 0,
   e_s = (1 - alpha_vl) * 10 ^ 3,
   n = 1 / 2,
