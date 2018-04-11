@@ -87,8 +87,9 @@ b <- 17.502
 c <- 240.97
 p <- 101325
 f <- (1.0007 + (3.46 * 10 ^ (-8) * p))
-df_s <- data_frame(t_a = seq (from = -20, to = 45, by = 1),
-e_s = f * (a * exp((b * t_a) / (c + t_a))))
+df_s <- data_frame(
+  t_a = seq (from = -20, to = 45, by = 1),
+  e_s = f * (a * exp((b * t_a) / (c + t_a))))
 
 base_plot %+% df_s %+% 
   aes(x = t_a, y = e_s) %+% 
