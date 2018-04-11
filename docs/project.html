@@ -243,9 +243,8 @@ div.tocify {
 </div>
 
 
-<div id="setting-up-the-model" class="section level3">
-<h3>Setting up the model</h3>
-</div>
+<div id="setting-up-the-model" class="section level1">
+<h1>Setting up the model</h1>
 <div id="base-plot" class="section level2">
 <h2>Base plot</h2>
 <pre class="r"><code>#' @param e_s Saturation Vapor Pressure
@@ -292,30 +291,34 @@ f &amp;= 1.0007 + 3.46 \times 10 ^ {-8} P
 \end{aligned}
 \]</span></p>
 </div>
+</div>
 <div id="question-1" class="section level1">
 <h1>Question 1:</h1>
 <p>How does temperature change the saturation vapor pressure? Do you expect a higher saturation vapor pressure at higher or lower temperatures? Why?</p>
 <pre class="r"><code># Plug in constants from equation
 # P = 1 atm = 101325 Pa
 # Vary temperature from -20 - +45
-  a &lt;- 
-  b &lt;- 
-  c &lt;- 
-  p &lt;- 
-  f &lt;- 
+a &lt;- 611.21
+b &lt;- 17.502
+c &lt;- 240.97
+p &lt;- 101325
+f &lt;- (1.0007 + (3.46 * 10 ^ (-8) * p))
 df_s &lt;- data_frame(
-  t_a = 
-  e_s = f * (a * exp((b * t_a)/(c + t_a)))
-)
+  t_a = ????,
+  e_s = f * (a * exp((b * t_a) / (c + t_a))))
 
-base_plot %+% df_s %+% aes(x = t_a, y = e_s) %+% scale_x_continuous(name = &quot;Temperature [C]&quot;) +
+base_plot %+% df_s %+% 
+  aes(x = t_a, y = e_s) %+% 
+  scale_x_continuous(name = &quot;Temperature [C]&quot;) +
   scale_y_continuous(name = &quot;Saturation Vapor Pressure [Pa]&quot;) </code></pre>
 <div id="vapor-pressure-deficit-vpd" class="section level2">
 <h2>Vapor Pressure Deficit [VPD]:</h2>
 <p><span class="math display">\[
 \begin{aligned}
 e_s(T_a) - e_a &amp;= VPD \\
-e_s(T_a) - e_a &amp;= e_s(T_a)(1 - \frac{RH}{100%})
+e_s(T_a) - e_a &amp;= e_s(T_a)(1 - \frac{RH}{100%}) \\
+\\
+\textrm {solve VPD} &amp;= e_s(T_a)(1 - \frac{RH}{100%}) \\
 \end{aligned}
 \]</span> VPD is the difference between ambient vapor pressure and vapor pressure at saturation. It is proportional to the rate of evaporation.</p>
 </div>
@@ -329,8 +332,8 @@ e_s(T_a) - e_a &amp;= e_s(T_a)(1 - \frac{RH}{100%})
 <p>Assuming a constant temperature, how does the VPD change with relative humidity?</p>
 <pre class="r"><code># Use expand.grid so you can vary both temperature and relative humidity
 df_vpd &lt;- expand.grid(
-  rh = 
-  t_a = 
+  rh = ????
+  t_a = ????
 ) %&gt;% 
   # Mutate df_vpd to then calculate e_s and vpd
   mutate(
@@ -338,7 +341,10 @@ df_vpd &lt;- expand.grid(
     vpd = e_s * ( 1 - (rh / 100))
   )
 
-base_plot %+% df_vpd %+% aes(x = rh, y = vpd, color = t_a, group = t_a) %+% scale_x_continuous(name = &quot;Relative Humidity&quot;) + scale_color_gradient (low = &quot;blue&quot;, high = &quot;red&quot;) +
+base_plot %+% df_vpd %+% 
+  aes(x = rh, y = vpd, color = t_a, group = t_a) %+% 
+  scale_x_continuous(name = &quot;Relative Humidity&quot;) + 
+  scale_color_gradient (low = &quot;blue&quot;, high = &quot;red&quot;) +
   scale_y_continuous(name = &quot;Vapor Pressur Deficit&quot;) </code></pre>
 <div id="overall-flux" class="section level2">
 <h2>Overall Flux:</h2>
@@ -354,28 +360,30 @@ r &amp;= r_M + r_T
 </div>
 <div id="question-3" class="section level1">
 <h1>Question 3:</h1>
-<p>How does the total flux change with different rt and rm values? How about relative humidity?</p>
+<p>How does the total flux change with different <span class="math inline">\(r_T\)</span> and <span class="math inline">\(r_M\)</span> values? How about relative humidity?</p>
 <p><span class="math display">\[
 \textrm{From the following source, assume:} \\
 \begin{aligned}
 \textrm{alpha} &amp;= 0.98 \\
 \textrm {rm} &amp;= 0.67 \\
 \end{aligned} \\
-\]</span> <span class="math inline">\(\href{https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf}{\textrm{Isotopic enrichment of liquid water during evaporation from water surfaces}}\)</span></p>
+\]</span> <a href="https://xleelab.sites.yale.edu/sites/default/files/files/kim1.pdf">Isotopic enrichment of liquid water during evaporation from water surfaces</a></p>
 <pre class="r"><code># Use 0.67 for rm, and assume an rt value
 # normalize the relative humidity by using the above relationship
 df_e &lt;- data_frame (
-  rm = 
-  rt = 
-  rh = 
-  alpha = 
-  rh_norm = 
-  r = 
+  rm = 0.67,
+  rt = ????,
+  rh = ????,
+  alpha = 0.98,
+  rh_norm = rh / alpha,
+  r = rm + rt,
   # Divide rh_norm by 100 when calculating e
   e = (1 - rh_norm / 100) / r 
 )
 
-base_plot %+% df_e %+% aes(x = rh_norm, y = e) %+% scale_x_continuous(name = &quot;Relative Humidity&quot;) +
+base_plot %+% df_e %+% 
+  aes(x = rh_norm, y = e) %+% 
+  scale_x_continuous(name = &quot;Relative Humidity&quot;) +
   scale_y_continuous(name = &quot;Total Flux&quot;) </code></pre>
 <div id="evaporation-flux-delta_e" class="section level2">
 <h2>Evaporation Flux: <span class="math inline">\(\delta_e\)</span></h2>
@@ -404,33 +412,37 @@ base_plot %+% df_e %+% aes(x = rh_norm, y = e) %+% scale_x_continuous(name = &qu
 </div>
 <div id="question-4a" class="section level1">
 <h1>Question 4A:</h1>
-<p>How does the starting delta value of the atmosphere combined with the relative humididty affec the delta of the evaporated water?</p>
+<p>How does the starting delta value of the atmosphere combined with the relative humididty affect the delta of the evaporated water?</p>
 </div>
 <div id="question-4b" class="section level1">
 <h1>Question 4B:</h1>
-<p>What happens at very high relative humidities? What happens if the starting delta values are changed [E.G. <span class="math inline">\(\\delta_a =\)</span> -5]?</p>
+<p>What happens at very high relative humidities? What happens if the starting delta values are changed [E.G. <span class="math inline">\(\delta_a =\)</span> -5]?</p>
 <pre class="r"><code># Use expand.grid again to vary rh and have 2 values for del_a
 # First have rh range from 0 - 75
 df_dele &lt;- 
   expand.grid(
-    rh = 
-    del_a = 
+    rh = ????,
+    del_a = c(-12, -20)
   ) %&gt;% 
   mutate(
-    alpha_vl =
-    alpha_k = 
-    del_l = 
-    eps_vl = 
-    e_k = 
-    del_e = (alpha_vl * del_l - rh / 100 * del_a - (eps_vl + e_k)) / ((1 - rh / 100) + e_k * 0.001) 
+    alpha_vl = 0.991,
+    alpha_k = 0.995,
+    del_l = 0,
+    eps_vl = (1 - alpha_vl) * 1000,
+    eps_k = (1 - alpha_k) * 1000,
+    del_e = (alpha_vl * del_l - rh / 100 * del_a - (eps_vl + eps_k)) / 
+      ((1 - rh / 100) + eps_k / 1000)
 )
-base_plot %+% df_dele %+% aes(x = rh, y = del_e, color = factor(del_a)) %+% scale_x_continuous(name = &quot;Relative Humidity&quot;) +
-  scale_y_continuous(name = latex2exp::TeX(&quot;$\\delta_e$&quot;))</code></pre>
+base_plot %+% df_dele %+% 
+  aes(x = rh, y = del_e, color = factor(del_a)) %+% 
+  scale_x_continuous(name = &quot;Relative Humidity&quot;) +
+  scale_y_continuous(name = TeX(&quot;$\\delta_e$&quot;)) +
+  labs(color = TeX(&quot;$\\delta_a$&quot;))</code></pre>
 <div id="improved-epsilon_k" class="section level2">
 <h2>Improved <span class="math inline">\(\epsilon_k\)</span></h2>
 <p><span class="math display">\[
 \begin{aligned}
-\epsilon_K &amp;= (1-h)\frac{r_M}{r}(1 - \frac{r_{M,i}}{r_M})10^3 \\
+\epsilon_K &amp;= (1-h)\frac{r_M}{r}\left(1 - \frac{r_{M,i}}{r_M}\right)10^3 \\
 i &amp; \textrm{ denotes the heavy isotope}
 \end{aligned}
 \]</span></p>
@@ -448,41 +460,48 @@ i &amp; \textrm{ denotes the heavy isotope}
 <pre class="r"><code># rm is still 0.67
 # Choose rt
 df_epsk &lt;- data_frame(
-  rh = 
-  rm = 
-  rt = 
-  r = 
-  rmi = 
-  eps_k = (1 - rh / 100) * (rm / r) * (1 - (rmi)) * 10 ^ 3
+  rh = ????,
+  rm = 0.67,
+  rt = 0.50,
+  r = rm + rt,
+  rmi = 0.98,
+  eps_k = ????
 )
-base_plot %+% df_epsk %+% aes(x = rh, y = eps_k) %+% scale_x_continuous(name = &quot;Relative Humidity&quot;) +
-  scale_y_continuous(name = latex2exp::TeX(&quot;$\\epsilon_k$&quot;))</code></pre>
+base_plot %+% df_epsk %+% 
+  aes(x = rh, y = eps_k) %+% 
+  scale_x_continuous(name = &quot;Relative Humidity&quot;) +
+  scale_y_continuous(name = TeX(&quot;$\\epsilon_k$&quot;))+
+  labs(color = TeX(&quot;$\\delta_a$&quot;))</code></pre>
 <div id="diffusion-flux-2.0" class="section level2">
 <h2>Diffusion Flux 2.0:</h2>
 <p><span class="math display">\[
 \begin{aligned}
-\epsilon_K &amp;= (1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 \\
-(1-h)\frac{r_M}{r}[1 - (\frac{D_i}{D})^n]10^3 &amp;\approx \theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) \\
-\theta \cdot (1 - h) \cdot n \cdot (1 - \frac{D_i}{D}10^3) &amp;= \theta \cdot (1 - h) \cdot C_K \\
+\epsilon_K 
+  &amp;= (1-h)\frac{r_M}{r}\left[1 - \left(\frac{D_i}{D}\right)^n\right]10^3 \\
+(1-h)\frac{r_M}{r}\left[1 - \left(\frac{D_i}{D}\right)^n\right]10^3 
+  &amp;\approx \theta \cdot (1 - h) \cdot n \cdot \left(1 - \frac{D_i}{D}10^3\right) \\
+\theta \cdot (1 - h) \cdot n \cdot \left(1 - \frac{D_i}{D}10^3\right) 
+  &amp;= \theta \cdot (1 - h) \cdot C_K \\
 \\
 \\
-\textrm{Solve: } \ &amp; \epsilon_K = \ \theta \cdot (1 - h) \cdot C_K \\
+\textrm{Solve: } \ &amp; 
+  \epsilon_K = \ \theta \cdot (1 - h) \cdot C_K \\
 &amp; Where \\
-C_K &amp;= n (1 - \frac{D_i}{D})10^3 \\
+C_K &amp;= n \left(1 - \frac{D_i}{D}\right)10^3 \\
 \theta &amp;= \frac{r_M}{r} \\
 \frac{D_i}{D} &amp;= \frac{M}{M_i} ^ {1/2} \\
 \end{aligned}
 \]</span></p>
 <pre class="r"><code>df_epskimp &lt;- data_frame(
-  rh = 
-  n = 
-  d = 
-  c_k = 
-  rm = 
-  rt =
-  r = 
-  theta = 
-  eps_kimp = theta * (1 - rh / 100) * c_k
+  rh = ????,
+  n = 1 / 2,
+  d = ????, 
+  c_k = n * (1 - d) * 10 ^ 3,
+  rm = 0.67,
+  rt = 0.50,
+  r = rm + rt,
+  theta = ????,
+  eps_kimp = ????
 )
 base_plot %+% df_epskimp %+% aes(x = rh, y = eps_kimp) %+% scale_x_continuous(name = &quot;Relative Humidity&quot;) +
   scale_y_continuous(name = latex2exp::TeX(&quot;$\\epsilon_k$&quot;))</code></pre>
@@ -503,27 +522,28 @@ base_plot %+% df_epskimp %+% aes(x = rh, y = eps_kimp) %+% scale_x_continuous(na
 <div id="question-6" class="section level1">
 <h1>Question 6:</h1>
 <p>What happens when relative humidity goes above 75%?</p>
-<pre class="r"><code>df_dele_complete &lt;- expand.grid(
-  rh = seq (from = 0, to = 75, by = 1),
-  del_a = c(-12, -20)
-) %&gt;%
+<pre class="r"><code>df_dele_complete &lt;- 
+  df_dele %&gt;% 
   mutate(
-  alpha_vl = 
-  alpha_k = 
-  del_l = 
-  e_s = 
-  n =
-  d = 
-  c_k = 
-  rm = 
-  rt = 
-  r = 
-  theta = 
-  eps_kimp = 
-  del_e = (alpha_vl * del_l - rh / 100 * del_a - (e_s + eps_kimp)) / ((1 - rh / 100) + (10 ^ (-3)) * eps_kimp)
-)
-base_plot %+% df_dele_complete %+% aes(x = rh, y = del_e, color = factor(del_a)) %+% scale_x_continuous(name = &quot;Relative Humidity&quot;) +
-  scale_y_continuous(name = latex2exp::TeX(&quot;$\\delta_e$&quot;))</code></pre>
+    n = 1 / 2,
+    d = (18 / 20) ^ (1 / 2),
+    c_k = n * (1 - d) * 10 ^ 3,
+    rm = 0.67,
+    rt = 0.50,
+    r = rm + rt,
+    theta = rm / r,
+    eps_kimp = theta * (1 - rh / 100) * c_k,
+    del_e_imp = (alpha_vl * del_l - rh / 100 * del_a - (eps_vl + eps_kimp)) / 
+      ((1 - rh / 100) + eps_kimp / 1000)
+  )
+
+base_plot %+% 
+  gather(df_dele_complete, variable, value, 
+         starts_with(&quot;del_e&quot;), starts_with(&quot;eps_k&quot;)) %+% 
+  aes(x = rh, y = value, color = factor(del_a), linetype = variable) %+% 
+  scale_x_continuous(name = &quot;Relative Humidity&quot;) +
+  scale_y_continuous(name = TeX(&quot;$\\delta_e$&quot;)) + 
+  labs(color = TeX(&quot;$\\delta_a$&quot;))</code></pre>
 </div>
 <div id="equilibrium-isotope-fractionation-at-the-water-air-interface-0---100c" class="section level1">
 <h1>Equilibrium Isotope Fractionation at the water-air interface [0 - 100C]:</h1>
@@ -534,13 +554,18 @@ base_plot %+% df_dele_complete %+% aes(x = rh, y = del_e, color = factor(del_a))
 \]</span></p>
 <pre class="r"><code># Defining the temperature range in Kelvin
 df_lna &lt;- data_frame(
-  t_a = seq(from = 253.15, to = 323.15, by = 1),
-  lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000,
+  t_a = ????,
+  lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 
+           1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000,
   alpha = (exp(lna))
 )
-base_plot %+% df_lna %+% aes(x = t_a - 273.15, y = 1/alpha) %+% 
+
+base_plot %+% df_lna %+% 
+  aes(x = t_a - 273.15, y = 1/alpha) %+% 
   scale_x_continuous(name = &quot;Temp [C]&quot;) +
-  scale_y_continuous(name = &quot;alpha&quot;, sec.axis = sec_axis(trans = ~(1 - .)*1000, name = &quot;eps&quot;))</code></pre>
+  scale_y_continuous(
+    name = TeX(&quot;$\\alpha$&quot;), 
+    sec.axis = sec_axis(trans = ~(1 - .)*1000, name = TeX(&quot;$\\epsilon$&quot;)))</code></pre>
 </div>
 
 
