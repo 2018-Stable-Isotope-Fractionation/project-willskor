@@ -4,11 +4,11 @@ author: "William Skorski"
 date: "`r format(Sys.Date(), '%d %b %Y')`"
 output:
   html_document: 
-  df_print: paged
-toc: yes
-toc_depth: 3
-toc_float: true
-code_folding: show
+    df_print: paged
+    toc: yes
+    toc_depth: 3
+    toc_float: true
+    code_folding: show
 editor_options:
   chunk_output_type: inline
 ---
@@ -249,6 +249,7 @@ $$
 \frac{r_{M,i}}{r_M} &= 0.98 \\
 \end{aligned}
 $$
+
 # Question 5:
 How does $\epsilon_k$ vary with relative humidity? How does $\epsilon_k$? vary with rt?
 
@@ -303,7 +304,18 @@ base_plot %+% df_epskimp %+% aes(x = rh, y = eps_kimp) %+% scale_x_continuous(na
   scale_y_continuous(name = latex2exp::TeX("$\\epsilon_k$"))
 ```
 
+
 # Using the improved $\epsilon_k$ to find $\delta_e$:
+
+$$
+\begin{aligned}
+\delta_E &= \frac{\alpha_{\frac{V}{L}} \cdot \delta_L - h \cdot \delta_A - (\epsilon* + \epsilon_K)}{(1-h) + 10 ^ {-3} \epsilon_K} \\
+\epsilon_K &= (1 - \alpha_K) 10^3 > 0 \\
+\delta_E &= \textrm{ isotopic composition of evaporating vapor} \\
+\delta_L &= \textrm{ isotopic composition of liquid water}\\
+\delta_A &= \textrm{ isotopic composition of the "free atmosphere"}\\
+\end{aligned}
+$$
 
 # Question 6:
 What happens when relative humidity goes above 75%?
