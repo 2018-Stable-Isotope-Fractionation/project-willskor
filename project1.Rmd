@@ -16,7 +16,7 @@ output:
 ```{r "load packages", include=FALSE}
 library(tidyverse)
 library(latex2exp)
-#knitr::opts_chunk$set(eval = FALSE)
+knitr::opts_chunk$set(eval = FALSE)
 ```
 
 # Setting up the model
