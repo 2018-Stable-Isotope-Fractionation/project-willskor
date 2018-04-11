@@ -213,7 +213,7 @@ $$
 $$
 
 # Question 4A:
-How does the starting delta value of the atmosphere combined with the relative humididty affect the delta of the evaporated water?
+How does the starting delta value of the atmosphere combined with the relative humidity affect the delta of the evaporated water?
 
 
 # Question 4B:
@@ -262,7 +262,7 @@ $$
 $$
 
 # Question 5:
-How does $\epsilon_k$ vary with relative humidity? How does $\epsilon_k$? vary with rt?
+How does $\epsilon_k$ vary with relative humidity? How does $\epsilon_k$ vary with $r_T$?
 
   
 ```{r}
