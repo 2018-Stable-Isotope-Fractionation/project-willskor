@@ -88,7 +88,7 @@ c <- 240.97
 p <- 101325
 f <- (1.0007 + (3.46 * 10 ^ (-8) * p))
 df_s <- data_frame(
-  t_a = ????,
+  t_a = seq(-20, 45, by = 1),
   e_s = f * (a * exp((b * t_a) / (c + t_a))))
 
 base_plot %+% df_s %+% 
@@ -121,8 +121,8 @@ Assuming a constant temperature, how does the VPD change with relative humidity?
 ```{r}
 # Use expand.grid so you can vary both temperature and relative humidity
 df_vpd <- expand.grid(
-  rh = ????
-  t_a = ????
+  rh = seq(0, 100, by = 1),
+  t_a = seq(-20, 45, by = 1)
 ) %>% 
   # Mutate df_vpd to then calculate e_s and vpd
   mutate(
@@ -172,8 +172,8 @@ $$
 # normalize the relative humidity by using the above relationship
 df_e <- data_frame (
   rm = 0.67,
-  rt = ????,
-  rh = ????,
+  rt = 0.5,
+  rh = seq(0, 100, by = 1),
   alpha = 0.98,
   rh_norm = rh / alpha,
   r = rm + rt,
@@ -226,7 +226,7 @@ What happens if the starting delta values are changed [E.G. $\delta_a =$ -5]?
 # First have rh range from 0 - 75
 df_dele <- 
   expand.grid(
-    rh = ????,
+    rh = seq(0, 95, by = 1),
     del_a = c(-12, -20)
   ) %>% 
   mutate(
@@ -269,12 +269,12 @@ How does $\epsilon_k$ vary with relative humidity? How does $\epsilon_k$ vary wi
 # rm is still 0.67
 # Choose rt
 df_epsk <- data_frame(
-  rh = ????,
+  rh = seq(0, 100, by = 1),
   rm = 0.67,
   rt = 0.50,
   r = rm + rt,
   rmi = 0.98,
-  eps_k = ????
+  eps_k = (1 - rh / 100) * (rm / r) * (1 - (rmi)) * 10 ^ 3
 )
 base_plot %+% df_epsk %+% 
   aes(x = rh, y = eps_k) %+% 
@@ -306,15 +306,15 @@ $$
 
 ```{r}
 df_epskimp <- data_frame(
-  rh = ????,
+  rh = seq( 0, 100, by = 1),
   n = 1 / 2,
-  d = ????, 
+  d = (18 / 20) ^ (1 / 2), 
   c_k = n * (1 - d) * 10 ^ 3,
   rm = 0.67,
-  rt = 0.50,
+  rt = 0.8,
   r = rm + rt,
-  theta = ????,
-  eps_kimp = ????
+  theta = rm / r,
+  eps_kimp = theta * (1 - rh / 100) * c_k
 )
 base_plot %+% df_epskimp %+% aes(x = rh, y = eps_kimp) %+% scale_x_continuous(name = "Relative Humidity") +
   scale_y_continuous(name = latex2exp::TeX("$\\epsilon_k$"))
@@ -374,7 +374,7 @@ $$
 ```{r}
 # Defining the temperature range in Kelvin
 df_lna <- data_frame(
-  t_a = ????,
+  t_a = seq(273.15, 373.15, by = 1),
   lna = (-2.0667 - 0.4156 * ((10 ^ 3) / t_a) + 
            1.137 * ((10 ^ 6) / (t_a ^ 2))) / 1000,
   alpha = (exp(lna))
